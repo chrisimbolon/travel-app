@@ -1,3 +1,5 @@
+# app/modules/users/infrastructure/repository_impl.py
+
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -11,15 +13,23 @@ class SQLUserRepository(UserRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_by_email(self, email: str):
-        obj = self.db.query(UserModel).filter(UserModel.email == email).first()
+    def get_by_email(self, email: str) -> User | None:
+        obj = (
+            self.db.query(UserModel)
+            .filter(UserModel.email == email)
+            .first()
+        )
         return self._to_domain(obj) if obj else None
 
-    def get_by_id(self, user_id: UUID):
-        obj = self.db.query(UserModel).filter(UserModel.id == user_id).first()
+    def get_by_id(self, user_id: UUID) -> User | None:
+        obj = (
+            self.db.query(UserModel)
+            .filter(UserModel.id == user_id)
+            .first()
+        )
         return self._to_domain(obj) if obj else None
 
-    def save(self, user: User):
+    def save(self, user: User) -> User:
         obj = UserModel(
             id=user.id,
             email=user.email,
@@ -29,6 +39,9 @@ class SQLUserRepository(UserRepository):
         )
         self.db.add(obj)
         self.db.commit()
+        self.db.refresh(obj)
+
+        return self._to_domain(obj)
 
     def _to_domain(self, obj: UserModel) -> User:
         return User(
