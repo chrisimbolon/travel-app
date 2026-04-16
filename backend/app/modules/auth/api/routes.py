@@ -1,41 +1,37 @@
-# modules/auth/api/routes.py
 from app.core.database import get_db
-from app.core.security import get_current_user
-from app.modules.auth.application.schemas import RegisterRequest
-from app.modules.auth.application.use_cases import login_user, register_user
+from app.modules.users.application.schemas import (LoginRequest,
+                                                   RegisterRequest,
+                                                   TokenResponse)
+from app.modules.users.application.use_cases import (LoginUserUseCase,
+                                                     RegisterUserUseCase)
+from app.modules.users.infrastructure.repository_impl import SQLUserRepository
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+def get_user_repo(db: Session = Depends(get_db)) -> SQLUserRepository:
+    return SQLUserRepository(db)
 
-@router.post("/register")
-def register(data: RegisterRequest, db: Session = Depends(get_db)):
-    user = register_user(db, data.email, data.password)
 
-    if not user:
-        raise HTTPException(status_code=400, detail="User already exists")
-
-    return {
-        "message": "User created successfully",
-        "email": user.email
-    }
-
-@router.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
-    result = login_user(db, data.email, data.password)
-
+@router.post("/register", response_model=TokenResponse)
+def register(
+    data: RegisterRequest,
+    repo: SQLUserRepository = Depends(get_user_repo),
+):
+    result = RegisterUserUseCase(repo).execute(data.email, data.password)
     if not result:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
+        raise HTTPException(status_code=400, detail="Email already registered")
     return result
 
 
-@router.get("/me")
-def get_me(current_user=Depends(get_current_user)):
-    return current_user
+@router.post("/login", response_model=TokenResponse)
+def login(
+    data: LoginRequest,
+    repo: SQLUserRepository = Depends(get_user_repo),
+):
+    result = LoginUserUseCase(repo).execute(data.email, data.password)
+    if not result:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return result
