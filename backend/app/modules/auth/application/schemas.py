@@ -1,11 +1,3 @@
-from pydantic import BaseModel, EmailStr
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+from app.modules.users.application.schemas import (LoginRequest,  # noqa: F401
+                                                   RegisterRequest,
+                                                   TokenResponse)
