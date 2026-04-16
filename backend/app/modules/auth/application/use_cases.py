@@ -1,19 +1,6 @@
-from app.modules.auth.infrastructure.security import (create_access_token,
-                                                      verify_password)
-from app.modules.users.infrastructure.models import UserModel
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
+# modules/auth/application/use_cases.py
 
-
-def login_user(db: Session, email: str, password: str) -> str:
-    user = db.query(UserModel).filter(UserModel.email == email).first()
-
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_access_token({"sub": str(user.id)})
-
-    return token
+# auth has no use cases of its own at MVP.
+# Login and registration logic lives in modules/users/application/use_cases.py.
+# Auth module owns: OTP issuance, token refresh, logout (all future).
+# Do not import SQLAlchemy, FastAPI, or infrastructure models here.
