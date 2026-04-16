@@ -1,33 +1,53 @@
-from passlib.context import CryptContext
+# modules/users/application/use_cases.py
+from app.core.security import (create_access_token, hash_password,
+                               verify_password)
 
 from ..domain.entities import User
 from ..domain.repositories import UserRepository
-from .schemas import CreateUserRequest, UserResponse
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class CreateUserUseCase:
+class RegisterUserUseCase:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
-    def execute(self, request: CreateUserRequest) -> UserResponse:
-        existing = self.repo.get_by_email(request.email)
+    def execute(self, email: str, password: str):
+        existing = self.repo.get_by_email(email)
         if existing:
-            raise ValueError("User already exists")
+            return None
 
-        hashed_password = pwd_context.hash(request.password)
+        hashed = hash_password(password)
 
         user = User.create(
-            email=request.email,
-            hashed_password=hashed_password,
+            email=email,
+            hashed_password=hashed
         )
 
         self.repo.save(user)
 
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            is_active=user.is_active,
-            created_at=user.created_at,
-        )
+        token = create_access_token({"sub": str(user.id)})
+
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+        }
+
+
+class LoginUserUseCase:
+    def __init__(self, repo: UserRepository):
+        self.repo = repo
+
+    def execute(self, email: str, password: str):
+        user = self.repo.get_by_email(email)
+
+        if not user:
+            return None
+
+        if not verify_password(password, user.hashed_password):
+            return None
+
+        token = create_access_token({"sub": str(user.id)})
+
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+        }
