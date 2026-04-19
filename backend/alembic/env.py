@@ -75,18 +75,6 @@ async def run_async_migrations() -> None:
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
-# async def run_async_migrations() -> None:
-#     connectable = async_engine_from_config(
-#         config.get_section(config.config_ini_section, {}),
-#         # config.get_section(config.ini_section, {}),
-#         prefix="sqlalchemy.",
-#         poolclass=pool.NullPool,
-#         connect_args={"server_settings": {"search_path": "public"}},  # ← THE FIX
-#     )
-#     async with connectable.connect() as connection:
-#         await connection.run_sync(do_run_migrations)
-#     await connectable.dispose()
-
 
 def run_migrations_online() -> None:
     asyncio.run(run_async_migrations())
