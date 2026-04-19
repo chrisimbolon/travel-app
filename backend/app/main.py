@@ -8,20 +8,19 @@ from app.modules.trips.api.routes import router as trips_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.create_all)
+#     scheduler = start_scheduler()
+#     yield
+#     scheduler.shutdown()
+#     await engine.dispose()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    scheduler = start_scheduler()
+    Base.metadata.create_all(bind=engine)
     yield
-    scheduler.shutdown()
-    await engine.dispose()
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     Base.metadata.create_all(bind=engine)
-#     yield
 
 
 app = FastAPI(title="Transitku API", lifespan=lifespan)
