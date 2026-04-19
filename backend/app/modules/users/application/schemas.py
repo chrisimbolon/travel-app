@@ -1,26 +1,41 @@
-# app/modules/users/application/schemas.py
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
 
-class RegisterRequest(BaseModel):
+class CreateOperatorRequest(BaseModel):
     email: EmailStr
     password: str
+    name: str
+    business_name: str
+    business_phone: str
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-class UserResponse(BaseModel):
+class OperatorProfileResponse(BaseModel):
     id: UUID
-    email: EmailStr
+    user_id: UUID
+    business_name: str
+    phone: str
+    is_approved: bool
+    approved_at: Optional[datetime]
+    created_at: datetime
+
+
+class CreateDriverRequest(BaseModel):
+    name: str
+    phone: str
+    licence_number: Optional[str] = None
+    linked_user_id: Optional[UUID] = None
+
+
+class DriverResponse(BaseModel):
+    id: UUID
+    operator_id: UUID
+    name: str
+    phone: str
+    licence_number: Optional[str]
+    linked_user_id: Optional[UUID]
     is_active: bool
     created_at: datetime
