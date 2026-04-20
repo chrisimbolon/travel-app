@@ -1,4 +1,4 @@
-export type UserRole = "passenger" | "operator" | "driver" | "admin";
+export type UserRole = "passenger" | "operator" | "admin";
 
 export interface AuthTokens {
   access_token: string;
@@ -7,59 +7,84 @@ export interface AuthTokens {
   role: UserRole;
 }
 
-export type TripStatus = "scheduled"|"boarding"|"departed"|"completed"|"cancelled";
+// ---- Routes ----
+export interface Route {
+  id: string;
+  origin: string;
+  destination: string;
+  distance_km: number | null;
+  estimated_duration_minutes: number | null;
+  is_active: boolean;
+}
+
+// ---- Trips ----
+export type TripStatus = "scheduled" | "boarding" | "departed" | "completed" | "cancelled";
 
 export interface Trip {
-  id: string; route_id: string; origin: string; destination: string;
-  departure_at: string; available_seats: number; total_seats: number;
-  price: number; operator_name: string; vehicle_model: string; status: TripStatus;
+  id: string;
+  route_id: string;
+  operator_id: string;
+  driver_id: string | null;
+  departure_at: string;
+  total_seats: number;
+  available_seats: number;
+  price_per_seat: number;   // IDR integer
+  status: TripStatus;
+  booking_code: string;
+  is_bookable: boolean;
+  created_at: string;
 }
 
-export interface TripCreate {
-  route_id: string; vehicle_id: string; driver_id?: string;
-  departure_at: string; total_seats: number; price: number;
+// ---- Bookings ----
+export type BookingStatus = "pending" | "confirmed" | "boarded" | "completed" | "cancelled";
+export type PaymentMethod = "cash" | "qris" | "bank_transfer" | "ewallet";
+export type PaymentStatus = "unpaid" | "paid" | "refunded";
+
+export interface CreateBookingRequest {
+  trip_id: string;
+  passenger_name: string;
+  passenger_phone: string;
+  seat_numbers: number[];
+  payment_method: PaymentMethod;
 }
 
-export interface Seat { seat_number: number; status: "available"|"locked"|"booked"; }
-export interface SeatsResponse { trip_id: string; total_seats: number; seats: Seat[]; }
-
-export type BookingStatus = "pending"|"confirmed"|"cancelled"|"completed";
-export type PaymentMethod = "cash"|"qris";
-
-export interface SeatDetail { seat_number: number; passenger_name: string; }
-export interface BookingCreate { trip_id: string; seats: SeatDetail[]; payment_method: PaymentMethod; }
 export interface Booking {
-  id: string; booking_code: string; trip_id: string; seat_count: number;
-  total_amount: number; payment_method: PaymentMethod; status: BookingStatus;
+  id: string;
+  trip_id: string;
+  passenger_id: string;
+  passenger_name: string;
+  passenger_phone: string;
+  seat_numbers: number[];
+  seat_count: number;
+  total_price: number;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  status: BookingStatus;
+  booking_ref: string;
+  payment_gateway_ref: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_at: string;
 }
 
-export type OperatorStatus = "pending"|"active"|"suspended";
-export interface Operator {
-  id: string; user_id: string; company_name: string;
-  license_number: string; status: OperatorStatus; created_at: string;
-}
-
-export interface Vehicle {
-  id: string; operator_id: string; plate_number: string;
-  model: string; capacity: number; status: "active"|"maintenance"|"inactive";
+// ---- Operators / Drivers ----
+export interface OperatorProfile {
+  id: string;
+  user_id: string;
+  business_name: string;
+  phone: string;
+  is_approved: boolean;
+  approved_at: string | null;
+  created_at: string;
 }
 
 export interface Driver {
-  id: string; user_id: string; operator_id: string;
-  license_number: string; status: "active"|"inactive"; name?: string; phone?: string;
-}
-
-export interface Route {
-  id: string; origin: string; destination: string;
-  distance_km: number; duration_min: number; is_active: boolean;
-}
-
-export interface OperatorStats {
-  total_trips: number; active_trips: number; total_bookings: number;
-  confirmed_bookings: number; total_revenue: number; this_month_revenue: number;
-}
-
-export interface AdminStats {
-  total_operators: number; active_operators: number; total_passengers: number;
-  total_trips: number; total_bookings: number; total_revenue: number;
+  id: string;
+  operator_id: string;
+  name: string;
+  phone: string;
+  licence_number: string | null;
+  linked_user_id: string | null;
+  is_active: boolean;
+  created_at: string;
 }
