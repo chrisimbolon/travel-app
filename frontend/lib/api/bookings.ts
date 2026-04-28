@@ -1,13 +1,20 @@
+import { Booking, CreateBookingRequest } from "@/types";
 import { apiClient } from "./client";
-import { Booking, BookingCreate } from "@/types";
 
 export const bookingsApi = {
-  create: (data: BookingCreate): Promise<{ data: Booking }> =>
+  create: (data: CreateBookingRequest): Promise<{ data: Booking }> =>
     apiClient.post("/bookings", data),
 
-  myBookings: (): Promise<{ data: Booking[] }> =>
-    apiClient.get("/bookings/my"),
+  listMine: (status?: string): Promise<{ data: Booking[] }> =>
+    apiClient.get("/bookings", { params: status ? { status } : undefined }),
 
-  cancel: (bookingId: string): Promise<{ data: { message: string; booking_code: string } }> =>
-    apiClient.delete(`/bookings/${bookingId}`),
+  get: (booking_id: string): Promise<{ data: Booking }> =>
+    apiClient.get(`/bookings/${booking_id}`),
+
+  cancel: (booking_id: string, reason?: string): Promise<{ data: Booking }> =>
+    apiClient.post(`/bookings/${booking_id}/cancel`, { reason }),
+
+  // Operator — trip manifest
+  getManifest: (trip_id: string): Promise<{ data: Booking[] }> =>
+    apiClient.get(`/trips/${trip_id}/manifest`),
 };
